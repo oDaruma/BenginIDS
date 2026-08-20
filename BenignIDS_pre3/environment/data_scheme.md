@@ -1,3 +1,9 @@
+# Legacy pre-v4 data scheme
+
+> This schema is preserved for the archived notebook pipeline. Use the current
+> [v4 data contract](../../BenignIDS_v4/docs/data_contract.md) for new work.
+
+```yaml
 DATA_SCHEME:
   required_any_of: [["label", "label_str", "attack_cat"]]
   target:
@@ -29,3 +35,4 @@ DATA_SCHEME:
   special_optional: ["attack_cat", "label_str"]
   exclude_from_features: [TARGET_COL, "payload", "attack_cat", "label_str"]
   validation: "Assert schema in Section 0.3 using pandera or Great Expectations."
+```

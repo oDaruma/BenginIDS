@@ -1,5 +1,9 @@
 # **Final Project — PCMLAI, Imperial College London**
 
+> **Legacy documentation:** This charter records the goals and claims of the pre-v4 notebook
+> project. It is retained for history and is not a current BenginIDS performance claim. See the
+> current [model card](../../model_card.md) and [`BenignIDS_v4`](../../BenignIDS_v4/README.md).
+
 This project develops a resilient Intrusion Detection System (IDS) designed to detect **unknown, evolving, and imbalanced cyber threats** in network traffic using the **UNSW-NB15 dataset**. The system distinguishes **benign traffic** from various attack categories under challenging conditions: **class imbalance** and **label noise**. 
 
 The system uses **Bayesian Optimization (BO)** to fine-tune a **LightGBM** classifier, achieving ~0.95 **PR-AUC** for reliable detection of rare, high-risk attacks. A **1D Convolutional Neural Network (CNN)** was benchmarked but underperformed compared to tree-based methods on structured network data. The pipeline incorporates **interpretability (SHAP)** and **ensemble methods** (bagging, soft voting, stacking) to enhance accuracy and trust. Exper

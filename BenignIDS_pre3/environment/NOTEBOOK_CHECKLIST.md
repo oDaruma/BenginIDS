@@ -1,5 +1,8 @@
 # BenignIDS — Notebook Checklist
 
+> **Legacy documentation:** This checklist applies only to the archived `BenignIDS_pre3`
+> notebooks. For current setup and behavior, use [`BenignIDS_v4`](../../BenignIDS_v4/README.md).
+
 **This checklist ensures the notebook conforms to the Style Guide (v2.4.4) baseline.**  
 **Baseline Sections Table**  
 | Section | Subsections |  

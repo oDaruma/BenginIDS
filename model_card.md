@@ -1,47 +1,61 @@
-# Model Card — Label_Trainer Intrusion Detector
+# Model card for BenginIDS
 
-## Model Description
+## Overview
 
-- **Inputs.** Tabular feature vectors **X** derived from network flows/payload statistics loaded from `archive/Payload_data_UNSW.csv`. Each row corresponds to a session/flow with numeric features and a binary label `y`.
-- **Outputs.**
-  - **Score:** Predicted probability \( $\hat p = P(y=1 \mid X)$ \).
-  - **Class:** Decision \( $\hat y = \mathbb{1}[\hat p \ge \tau]$ \) using a threshold **τ** selected to maximize **F1** on validation.
-- **Model architectures.**
-  - **Primary:** Gradient-boosted trees (**LightGBM** classifier) with class‑imbalance aware tuning.
-  - **Alternative (optional):** CNN‑based classifier for derived representations; used as an experimental baseline.
-- **Training setup.** Stratified train/validation/test split; **Bayesian optimization** (skopt) plus parallel grid search; artifacts checkpointed under `staging/` for exact resume.
+BenginIDS is an experimental framework rather than one pretrained model. It trains and compares
+binary intrusion-detection models on user-supplied labelled network records. No trained model is
+distributed as a universal or production-ready champion.
 
-## Performance
+## Supported models
 
+- Logistic regression, random forest, and LightGBM tabular models.
+- Optional 1D-CNN experiments.
+- Soft-voting and stacking ensembles.
+- A compact traffic transformer with masked-token pretraining and binary fine-tuning.
+- Grid, randomized, and Bayesian hyperparameter searches.
 
-### Champion: LightGBM_BO_Enhanced (stage: `bo_enhanced`)
-- **Dataset**: archive/Payload_data_UNSW.csv
-- **AUPRC**: 0.9999 | **F1@τ**: 0.9997 | **τ**: 0.050
-- **Seed**: 42 | **Updated**: 2025-08-29 07:41:58Z
-- **Params**:
+Optional SHAP support can assist analysis but does not establish causal explanations.
 
-```json
-{
-  "num_leaves": 118,
-  "max_depth": 12,
-  "min_child_samples": 21,
-  "subsample": 0.9012640129099659,
-  "colsample_bytree": 0.8659965652378008,
-  "learning_rate": 0.050602060132694665,
-  "reg_lambda": 0.8973465609044181
-}
-```
+## Inputs and outputs
 
+Inputs are labelled CSV/Parquet payload or flow records, including tables prepared from PCAP plus
+an external label manifest. The configured target defaults to `label` and is excluded from model
+features. Models produce an attack score approximating `P(y = 1 | X)`; a validation-selected
+threshold `tau` converts it into a binary prediction.
 
-## Limitations
+Artifacts may include fitted models, optimizer state, metrics, plots, tokenizer/checkpoint files,
+and experiment manifests. Generated binaries are excluded from version control.
 
-- **Domain shift.** Performance may drop on networks unlike the training source; re‑calibration of **τ** is recommended per environment.
-- **Label noise.** If labels are derived from heuristics/signatures, minority-class noise can bias thresholding and AUPRC.
-- **Interpretability.** Tree ensembles are less interpretable than single trees; use SHAP/feature importance for analyst transparency.
+## Evaluation
 
-## Trade‑offs
+- Training data fits preprocessing, representations, and model parameters.
+- Cross-validation within training data selects hyperparameters.
+- Validation data selects the classification threshold.
+- Test data is intended for one final evaluation.
+- Average precision/PR-AUC is primary; precision, recall, F1, ROC-AUC, Brier score, calibration,
+  confusion matrices, and runtime provide additional context.
 
-- **Precision vs. coverage.** Increasing **τ** reduces false positives (higher precision) but may miss stealthy attacks (lower recall).
-- **Latency vs. accuracy.** Heavier feature pipelines and CNN baselines may improve accuracy but increase compute.
-- **Generalization vs. specificity.** Tuning on one subnet/application mix may overfit to that context; prefer cross‑site validation when possible.
+Values are meaningful only with their dataset provenance, split policy, seed, configuration, and
+dependency versions. Historical legacy-notebook metrics are not validated v4 performance claims.
 
+## Intended and excluded uses
+
+Appropriate uses include education, reproducible IDS model comparison, controlled research on
+imbalance and robustness, and prototyping with authorized labelled traffic.
+
+Out-of-scope uses include autonomous blocking or disciplinary decisions, claims of zero-day
+detection without prospective evidence, unauthorized surveillance, deployment to an unseen
+network without local validation, and training on data with unknown provenance or usage rights.
+
+## Limitations and safeguards
+
+- Domain shift can substantially reduce performance.
+- Capture-level labels can mislabel mixed traffic.
+- Correlated flows can leak across record-level splits.
+- Imbalance can make accuracy and ROC-AUC deceptively strong.
+- Payload features can contain sensitive content or dataset-specific shortcuts.
+- Probability scores may become miscalibrated after environmental change.
+
+Validate on representative local data, prefer group/time-based splits, inspect false positives
+and negatives, calibrate thresholds, monitor drift, maintain human review and rollback paths, and
+treat every generated model as experimental until it passes production security/privacy review.

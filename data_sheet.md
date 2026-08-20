@@ -1,57 +1,63 @@
-# Datasheet: Label_Trainer IDS Payload Dataset
+# Datasheet for BenginIDS training data
 
-> This datasheet documents the dataset used by the **Label_Trainer** project to train and evaluate intrusion detection models for adversarial behaviors (e.g., lateral movement, abnormal activity, zero‑day‑like traffic).
+## Scope and purpose
 
-## Motivation
+BenginIDS does not distribute a canonical training dataset. Users supply a labelled CSV or
+Parquet table, or generate a labelled flow table from authorized PCAP files and an external label
+manifest. Dataset-specific facts such as row count, capture dates, class balance, licensing, and
+collection environment must be recorded by the person running the experiment.
 
-- **Purpose.** Support supervised learning experiments for network intrusion detection and alert triage in a SOC setting. The focus is on **high precision under class imbalance** and on selecting a **decision threshold (τ)** that balances coverage (TPR/Recall) versus false alert rate (TNR/Specificity).
-- **Creators / funding.** Prepared for the Imperial College PCMLAI coursework as part of the student's defensive cybersecurity track. Curated and formatted by the student for research and education.
-- **Intended users.** Researchers and students running the Label_Trainer notebook; SOC analysts interested in reproducible IDS model training and thresholding.
+The interface supports educational and research experiments in binary network intrusion
+detection. It is not intended for identifying people, inspecting traffic without authorization,
+or making fully autonomous enforcement decisions.
 
-## Composition
+## Supported sources
 
-- **Instances.** Tabular rows where each instance summarizes a network flow/session or payload-derived feature vector. Columns include numerical/statistical aggregations and a **binary label** (`y ∈ {0,1}`) indicating attack vs. benign.
-- **Cardinality.** Depends on the CSV version checked into the project. Typical size: tens to hundreds of thousands of rows.
-- **Missing data.** Some columns may contain missing values; preprocessing handles imputation or column drops (see below).
-- **Potentially sensitive fields.** No PII is expected. Payload-derived features are **aggregated** statistics (not raw content). Do **not** add raw packet payloads or user identifiers to this dataset without a privacy review.
+Labelled CSV/Parquet records require a target column (`label` by default) and may contain ordered
+`payload_byte_1 ... payload_byte_N` fields, numerical or categorical flow metadata, and an
+optional `attack_cat`. Named `benign` and `normal` labels map to `0`; other named categories map
+to `1`. A target already encoded entirely as `0` and `1` is preserved. See the
+[v4 data contract](BenignIDS_v4/docs/data_contract.md).
 
-## Collection process
+PCAP files do not normally contain ground truth. The PCAP workflow requires a CSV manifest with
+`pcap_path`, `label`, and optional `attack_cat`. It aggregates packets into bidirectional
+five-tuple flow records with packet counts, byte counts, duration, payload bytes, protocol data,
+and a capture identifier. Capture-level labels are unsafe for mixed-class captures unless
+flow-level ground truth is supplied separately.
 
-- **Acquisition.** Loaded from `archive/Payload_data_UNSW.csv` (a prepared CSV of payload/flow features). The file is included in the project’s expected folder layout.
-- **Sampling.** Dataset may represent a filtered/stratified subset to emphasize minority attack classes and realistic imbalance. Any additional sampling is documented in the training notebook’s staging manifests.
-- **Time frame.** Not time-series aligned in the current release; rows may originate from multiple capture days. If you construct temporal splits, document the period at split time.
+## Provenance and licensing
 
-## Preprocessing / cleaning / labeling
+Legacy notebooks reference prepared UNSW-NB15/CIC-IDS2017-derived payload tables. Those large
+files are excluded from this repository. Users must verify the source, license, redistribution
+rights, transformations, and checksum of any supplied dataset.
 
-- **Transforms.** 
-  - Column type casting; categorical handling when present.
-  - Standardization / scaling where required by model family.
-  - Train/validation/test split with **stratification on `y`**.
-  - Threshold selection by maximizing **F1** on the validation set to obtain **τ**.
-- **Label source.** Binary labels loaded from `label` or `label_str` (converted to `y ∈ {0,1}`).
-- **Raw retention.** The original CSV in `archive/` is preserved. Intermediate artifacts and folds are stored in `staging/` to enable exact resume/reproduction.
+For each experiment, record the source or collection owner, license, acquisition date, checksum,
+capture environment and time range, filtering and labeling steps, row/capture counts, and class
+distribution.
 
-## Uses
+## Splitting and leakage
 
-- **Primary tasks.** 
-  - Binary classification for intrusion/attack detection.
-  - Threshold calibration for SOC deployment.
-- **Other plausible tasks.** 
-  - Cost-sensitive learning; PU learning; drift checks; feature attribution analyses.
-- **Use considerations & risks.**
-  - **Imbalance:** Metrics such as **AUPRC** are emphasized; ROC‑AUC alone can be misleading.
-  - **Shift risk:** Models may degrade on new networks; validate on site-specific samples before deployment.
-  - **Fairness & harm:** Although no protected attributes are included, false positives may incur operational cost; tune **τ** for acceptable alert rates and provide analyst‑in‑the‑loop review.
-- **Out‑of‑scope uses.**
-  - Identification of individuals; content inspection beyond aggregate statistics; any application involving PII without a separate privacy assessment.
+The experiments use stratified train, validation, and test partitions. Random record-level
+splitting can still leak correlated packets or flows. For serious evaluation, group by capture,
+time window, source host, or collection scenario and document the policy. Fit preprocessing and
+models on training data, choose thresholds on validation data, and reserve test data for final
+evaluation.
 
-## Distribution
+## Sensitive information
 
-- **Sharing.** Provided for coursework and internal research. Do not redistribute raw captures or any proprietary traffic.
-- **Licensing / ToU.** Treat as educational/research use only unless you have rights to redistribute the underlying CSV.
+Raw captures and payload bytes can expose credentials, identifiers, communications, addresses,
+or proprietary protocols. Do not assume packet-derived data is anonymous. Minimize retained
+fields, control access, define retention periods, and obtain privacy/security review before
+processing real organizational traffic.
 
-## Maintenance
+## Known limitations
 
-- **Maintainer.** Student owner of the Label_Trainer project.
-- **Contact.** See the project README for contact details (optional).
-- **Versioning.** Changes are recorded via notebook `PROJECT_VERSION` and `staging/manifest.json` files per stage.
+- Public benchmark traffic may not represent a target network.
+- Labels can be incomplete, heuristic, or capture-level rather than flow-level.
+- Class ratios and attack families change over time.
+- Random sampling may hide temporal or host-level dependencies.
+- A binary target collapses differences among attack categories.
+
+Dataset files and generated artifacts are intentionally ignored by Git. Experiment manifests
+should identify the data path, record count, split sizes, label semantics, and random seed without
+embedding sensitive records.
