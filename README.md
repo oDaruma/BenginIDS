@@ -16,7 +16,9 @@ ship raw captures, large datasets, or trained-model binaries.
 - Leakage-aware train, validation, and test partitions.
 - Logistic regression, random forest, LightGBM, 1D-CNN, soft-voting, and stacking comparisons.
 - Grid, randomized, and Bayesian hyperparameter searches using average precision.
-- A traffic transformer with masked-token pretraining followed by supervised fine-tuning.
+- A traffic transformer with masked-token pretraining followed by supervised behavior
+  classification (`BENIGN`, `RECONNAISSANCE`, `BRUTE_FORCE`, `C2_BEACONING`, `EXFILTRATION`,
+  `EXPLOITATION`, `DOS`, or `UNKNOWN`).
 - Validation-set decision-threshold selection, PR-AUC, calibration, confusion matrices, and
   reproducible experiment manifests.
 - Teaching notebooks connecting the implementation to core machine-learning concepts.
@@ -54,8 +56,9 @@ python -m pip install -e .
 
 Large data files are excluded from Git. Set `data.path` in `BenignIDS_v4/configs/default.yaml`
 to a CSV or Parquet dataset that follows the [data contract](BenignIDS_v4/docs/data_contract.md).
-The target column defaults to `label`; benign/normal values map to `0`, and other named classes
-map to `1`.
+Named transformer training uses `behavior_label` by default. Missing values are conservatively
+pseudo-labelled from observable fields, written to `training_labels.csv` with a trailing `*`, and
+fall back to `UNKNOWN*` when there is insufficient evidence. Pseudo-labels are not ground truth.
 
 Raw PCAP files require external labels. Create a manifest such as
 [`BenignIDS_v4/examples/pcap_labels.csv`](BenignIDS_v4/examples/pcap_labels.csv), then prepare a
@@ -73,8 +76,8 @@ appropriate when every relevant flow in a capture has the same ground-truth clas
 
 ## Run experiments
 
-Train a friendly-named traffic transformer from a labelled CSV, then use it to classify flows in a
-PCAP and print results to stdout:
+Train a friendly-named behavior transformer from CSV, then use it to describe probable behavior
+for flows in a PCAP and print results to stdout:
 
 ```bash
 cd BenignIDS_v4
@@ -83,9 +86,9 @@ benignids --run captures/example.pcap --model unsw-transformer
 ```
 
 Each training run is stored separately under `artifacts/models/<model-name>/`. PCAP inference is
-flow-level and reports malicious probability, the stored validation threshold, and a
-`BENIGN`/`MALICIOUS` decision. It requires the optional PCAP dependencies installed by `.[pcap]`
-or `.[all]`.
+flow-level and reports a probable behavior, confidence, alternative hypothesis, and observable
+flow evidence. These are behavior hypotheses—not proof of malicious intent. It requires the
+optional PCAP dependencies installed by `.[pcap]` or `.[all]`.
 
 The original experiment subcommands remain available:
 

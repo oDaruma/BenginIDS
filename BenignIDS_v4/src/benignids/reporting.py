@@ -33,10 +33,11 @@ def _prepare(path: str | Path) -> Path:
 
 def plot_class_distribution(y, path: str | Path) -> None:
     path = _prepare(path)
-    counts = pd.Series(y).map({0: "Benign", 1: "Attack"}).value_counts()
+    values = pd.Series(y)
+    counts = values.map({0: "Benign", 1: "Attack"}).value_counts() if set(values.unique()) <= {0, 1} else values.value_counts()
     figure, axis = plt.subplots(figsize=(7, 4))
     sns.barplot(x=counts.index, y=counts.values, hue=counts.index, legend=False, ax=axis)
-    axis.set(title="Binary class distribution", xlabel="Traffic class", ylabel="Records")
+    axis.set(title="Class distribution", xlabel="Traffic class", ylabel="Records")
     for index, value in enumerate(counts.values):
         axis.text(index, value, f"{value:,}", ha="center", va="bottom")
     figure.tight_layout()
@@ -88,10 +89,10 @@ def plot_pr_curves(curves: dict[str, tuple], path: str | Path) -> None:
     plt.close(figure)
 
 
-def plot_confusion(matrix, path: str | Path, title: str) -> None:
+def plot_confusion(matrix, path: str | Path, title: str, labels=None) -> None:
     path = _prepare(path)
     figure, axis = plt.subplots(figsize=(5, 5))
-    display = ConfusionMatrixDisplay(np.asarray(matrix), display_labels=["Benign", "Attack"])
+    display = ConfusionMatrixDisplay(np.asarray(matrix), display_labels=labels or ["Benign", "Attack"])
     display.plot(ax=axis, cmap="Blues", colorbar=False)
     axis.set_title(title)
     figure.tight_layout()
@@ -106,8 +107,9 @@ def plot_training_history(pretraining: list[dict], fine_tuning: list[dict], path
     fine = pd.DataFrame(fine_tuning)
     axes[0].plot(pre["epoch"], pre["loss"], marker="o")
     axes[0].set(title="Masked-token pretraining", xlabel="Epoch", ylabel="Loss")
-    axes[1].plot(fine["epoch"], fine["val_pr_auc"], marker="o", color="tab:green")
-    axes[1].set(title="Supervised fine-tuning", xlabel="Epoch", ylabel="Validation PR-AUC", ylim=(0, 1.02))
+    metric = "val_pr_auc" if "val_pr_auc" in fine else "val_accuracy"
+    axes[1].plot(fine["epoch"], fine[metric], marker="o", color="tab:green")
+    axes[1].set(title="Supervised fine-tuning", xlabel="Epoch", ylabel=metric.replace("_", " ").title(), ylim=(0, 1.02))
     figure.tight_layout()
     figure.savefig(path, dpi=160)
     plt.close(figure)
@@ -137,14 +139,12 @@ def write_transformer_report(metrics: dict, output: str | Path, figures: list[st
     images = "\n".join(f"![{Path(figure).stem}]({figure})" for figure in figures)
     output.write_text(
         "# Traffic-transformer tutorial results\n\n"
-        "The encoder first learned by predicting masked traffic tokens, then learned the binary "
-        "IDS target. The decision threshold was selected on validation data.\n\n"
+        "The encoder first learned by predicting masked traffic tokens, then learned the "
+        "multiclass behavior target. Labels are behavior hypotheses, not proof of intent.\n\n"
         "## Test metrics\n\n"
-        f"- PR-AUC: **{metrics['pr_auc']:.4f}**\n"
-        f"- Precision: **{metrics['precision']:.4f}**\n"
-        f"- Recall: **{metrics['recall']:.4f}**\n"
-        f"- F1: **{metrics['f1']:.4f}**\n"
-        f"- Threshold tau: **{metrics['threshold']:.4f}**\n"
+        f"- Accuracy: **{metrics['accuracy']:.4f}**\n"
+        f"- Macro F1: **{metrics['macro_f1']:.4f}**\n"
+        f"- Weighted F1: **{metrics['weighted_f1']:.4f}**\n"
         f"- Input mode: **{metrics['input_mode']}**\n\n"
         "These values describe this split and run; they are not a universal deployment claim.\n\n"
         f"## Figures\n\n{images}\n",

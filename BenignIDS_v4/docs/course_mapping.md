@@ -7,7 +7,7 @@ accreditation claim or evidence that every optional model is suitable for produc
 | Course concept | BenignIDS v4 demonstration |
 |---|---|
 | Python, NumPy, pandas | Chunk-aware data loading, vectorized token arrays, comparison tables |
-| Probability and statistics | P(y = 1 '|' X)`, calibration/Brier score, uncertainty and label noise |
+| Probability and statistics | Class probabilities, confidence, uncertainty and label noise |
 | Training, validation, test sets | Three-way stratified split with the test set opened once |
 | Cross-validation | `StratifiedKFold` optimizing average precision |
 | Preprocessing | Median imputation, scaling, one-hot encoding, byte tokenization |

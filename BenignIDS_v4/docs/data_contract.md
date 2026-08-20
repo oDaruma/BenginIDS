@@ -5,15 +5,21 @@ and `.parquet`; raw PCAP must first be converted with `benignids prepare-pcap`.
 
 ## Archived payload CSV
 
-Required:
+Preferred:
 
-- `label`: `benign`/`normal`, an attack category, or binary `0`/`1`.
+- `behavior_label`: one of `BENIGN`, `RECONNAISSANCE`, `BRUTE_FORCE`, `C2_BEACONING`,
+  `EXFILTRATION`, `EXPLOITATION`, `DOS`, or `UNKNOWN`.
 
 Supported features:
 
 - ordered `payload_byte_1 ... payload_byte_N` fields;
 - metadata such as `ttl`, `total_len`, `protocol`, and `t_delta`;
-- optional `attack_cat` when the binary label is separate.
+- optional `attack_cat`, used as pseudo-label evidence when `behavior_label` is missing.
+
+The target name is configurable with `data.behavior_target`. Missing labels are guessed only when
+an implemented observable rule matches. `training_labels.csv` appends `*` to generated labels and
+records the reason; otherwise the generated label is `UNKNOWN*`. At least two classes are
+required. With the default 20/20/60 split, each class needs at least five records.
 
 For CSV payload archives, the loader projects the configured ordered byte prefix to bound memory
 and sequence length. In quick mode it samples from the projected table rather than taking only the
@@ -38,10 +44,9 @@ Parquet engine in the runtime environment.
 
 ## Validation and provenance
 
-- The configured target column must exist.
-- Named benign labels are configured under `data.benign_labels`; every other named target becomes
-  the attack class.
-- Numeric targets are accepted directly only when all non-null values are binary `0`/`1`.
+- Supplied behavior labels are normalized to the documented taxonomy; unsupported values become
+  `UNKNOWN` rather than silently creating arbitrary classes.
+- Pseudo-labels are weak supervision and must not be reported as analyst-confirmed truth.
 - Dataset source, license, checksum, transformations, collection period, and split policy should
   accompany every reported result.
 - Payloads and addresses may be sensitive even when transformed into flow records.

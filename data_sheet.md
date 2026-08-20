@@ -7,17 +7,20 @@ Parquet table, or generate a labelled flow table from authorized PCAP files and 
 manifest. Dataset-specific facts such as row count, capture dates, class balance, licensing, and
 collection environment must be recorded by the person running the experiment.
 
-The interface supports educational and research experiments in binary network intrusion
-detection. It is not intended for identifying people, inspecting traffic without authorization,
+The interface supports educational and research experiments in binary intrusion detection and
+multiclass network-behavior classification. It is not intended for identifying people, inspecting traffic without authorization,
 or making fully autonomous enforcement decisions.
 
 ## Supported sources
 
-Labelled CSV/Parquet records require a target column (`label` by default) and may contain ordered
+Named transformer training prefers `behavior_label` and may contain ordered
 `payload_byte_1 ... payload_byte_N` fields, numerical or categorical flow metadata, and an
-optional `attack_cat`. Named `benign` and `normal` labels map to `0`; other named categories map
-to `1`. A target already encoded entirely as `0` and `1` is preserved. See the
+optional `attack_cat`. The behavior taxonomy is documented in the
 [v4 data contract](BenignIDS_v4/docs/data_contract.md).
+
+When a behavior label is absent, a deterministic heuristic may generate one. Generated labels are
+marked with `*` in the audit artifact and default to `UNKNOWN*` when evidence is insufficient.
+They are weak supervision, not analyst-confirmed ground truth, and should be reviewed.
 
 PCAP files do not normally contain ground truth. The PCAP workflow requires a CSV manifest with
 `pcap_path`, `label`, and optional `attack_cat`. It aggregates packets into bidirectional
@@ -56,7 +59,8 @@ processing real organizational traffic.
 - Labels can be incomplete, heuristic, or capture-level rather than flow-level.
 - Class ratios and attack families change over time.
 - Random sampling may hide temporal or host-level dependencies.
-- A binary target collapses differences among attack categories.
+- Pseudo-label heuristics can introduce systematic label errors and circular evaluation.
+- PCAP observations support behavior hypotheses but cannot establish human intent.
 
 Dataset files and generated artifacts are intentionally ignored by Git. Experiment manifests
 should identify the data path, record count, split sizes, label semantics, and random seed without

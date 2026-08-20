@@ -6,6 +6,7 @@ project:
 data:
   path: ../../BenignIDS_Notebooks_v3/archive/Payload_data_UNSW.csv
   target: label
+  behavior_target: behavior_label
   benign_labels: [benign, normal]
   drop_features: [ttl, total_len, t_delta]
   payload_column: null

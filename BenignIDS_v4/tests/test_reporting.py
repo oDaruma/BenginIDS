@@ -49,12 +49,10 @@ def test_tutorial_reports_and_charts_are_generated(tmp_path):
     )
     write_tutorial_report(table, tmp_path / "tutorial.md", ["models.png"])
     metrics = {
-        "pr_auc": 0.9,
-        "precision": 0.8,
-        "recall": 0.7,
-        "f1": 0.75,
-        "threshold": 0.6,
-        "input_mode": "unsw_csv_records",
+        "accuracy": 0.9,
+        "macro_f1": 0.8,
+        "weighted_f1": 0.85,
+        "input_mode": "csv_records",
     }
     write_transformer_report(metrics, tmp_path / "transformer.md", ["history.png"])
     expected = {
@@ -67,4 +65,3 @@ def test_tutorial_reports_and_charts_are_generated(tmp_path):
         "transformer.md",
     }
     assert expected.issubset({path.name for path in Path(tmp_path).iterdir()})
-

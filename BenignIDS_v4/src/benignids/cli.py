@@ -14,8 +14,8 @@ from .transformer_experiment import run_transformer_experiment
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="BenignIDS v4 experiment runner")
     runtime = parser.add_mutually_exclusive_group()
-    runtime.add_argument("--train", metavar="CSV", help="train a named transformer from labelled CSV")
-    runtime.add_argument("--run", dest="run_pcap", metavar="PCAP", help="classify flows in a PCAP")
+    runtime.add_argument("--train", metavar="CSV", help="train a named behavior transformer from CSV")
+    runtime.add_argument("--run", dest="run_pcap", metavar="PCAP", help="describe flow behavior hypotheses in a PCAP")
     parser.add_argument("--model", help="friendly model name stored under artifacts/models")
     parser.add_argument("--config", default="configs/default.yaml")
     parser.add_argument("--quick", action="store_true", help="use a small training budget")
@@ -43,7 +43,7 @@ def main() -> None:
             parser.error("--train requires --model")
         training_path = Path(args.train)
         if training_path.suffix.lower() != ".csv":
-            parser.error("--train accepts only a labelled .csv file")
+            parser.error("--train accepts only a .csv file")
         config = deepcopy(load_config(Path(args.config)))
         config["data"]["path"] = str(training_path)
         bundle = model_bundle_path(config["project"]["output_dir"], args.model)

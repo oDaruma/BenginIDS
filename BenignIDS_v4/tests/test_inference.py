@@ -38,3 +38,20 @@ def test_print_pcap_results_writes_rows_and_summary(capsys):
     assert "BENIGN" in output
     assert "MALICIOUS" in output
     assert "Summary: flows=2 benign=1 malicious=1 threshold=0.500000" in output
+
+
+def test_print_behavior_hypotheses_writes_caveat(capsys):
+    results = pd.DataFrame(
+        {
+            "behavior": ["BENIGN", "C2_BEACONING"],
+            "confidence": [0.8, 0.7],
+            "alternative": ["UNKNOWN", "BENIGN"],
+            "alternative_confidence": [0.1, 0.2],
+        }
+    )
+
+    print_pcap_results(results, 0.0)
+
+    output = capsys.readouterr().out
+    assert "C2_BEACONING=1" in output
+    assert "model hypotheses, not statements of human intent" in output

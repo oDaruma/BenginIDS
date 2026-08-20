@@ -8,7 +8,7 @@ payload/flow records derived from PCAP. Its primary model is a compact traffic t
 two stages:
 
 1. self-supervised masked-token pretraining on unlabelled traffic; and
-2. supervised fine-tuning for `0 = benign/normal`, `1 = attack/suspicious`.
+2. supervised fine-tuning for a documented network-behavior taxonomy.
 
 A Bayesian-optimized LightGBM pipeline is the principal non-transformer baseline. Grid search,
 random search, logistic regression, random forests, a 1D-CNN, soft voting, and stacking show how
@@ -69,9 +69,18 @@ benignids --train data/training.csv --model unsw-transformer
 ```
 
 Add `--quick` for a small training budget or `--config path/to/config.yaml` to select another
-configuration. The CSV must contain the configured target column (`label` by default). Bundles are
+configuration. The behavior target is `behavior_label` by default and is configurable through
+`data.behavior_target`. Supported classes are `BENIGN`, `RECONNAISSANCE`, `BRUTE_FORCE`,
+`C2_BEACONING`, `EXFILTRATION`, `EXPLOITATION`, `DOS`, and `UNKNOWN`. Bundles are
 stored under `artifacts/models/<model-name>/` and contain `model.pt`, `tokenizer.json`,
-`metrics.json`, and `manifest.json`. Existing model names are not overwritten.
+`metrics.json`, `manifest.json`, and `training_labels.csv`. Existing model names are not
+overwritten.
+
+If the target column or an individual value is absent, BenginIDS attempts a conservative
+rule-based pseudo-label from observable fields. Generated values carry `*` in
+`training_labels.csv`; when no defensible rule matches, the value is `UNKNOWN*`. The classifier
+trains on the underlying class without the marker, while the audit file and manifest retain
+pseudo-label provenance. Review or replace pseudo-labels before serious evaluation.
 
 Classify an authorized PCAP with a stored model:
 
@@ -79,10 +88,10 @@ Classify an authorized PCAP with a stored model:
 benignids --run captures/example.pcap --model unsw-transformer
 ```
 
-The command aggregates packets into bidirectional flows, prints each flow's malicious probability,
-decision threshold, and `BENIGN`/`MALICIOUS` result to stdout, then prints a summary. This is
-flow-level inference, not an independent classification of every packet. `.pcap` and `.pcapng`
-files are accepted.
+The command aggregates packets into bidirectional flows and prints the most probable behavior,
+confidence, second-ranked alternative, and observable evidence to stdout. This is flow-level
+behavior-hypothesis generation, not an independent classification of every packet and not proof
+of human intent. `.pcap` and `.pcapng` files are accepted.
 
 Model names must start with a letter or number and may contain letters, numbers, dots, underscores,
 and hyphens. Use the same `--config` at training and inference time when it changes `output_dir`.

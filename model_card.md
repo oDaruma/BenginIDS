@@ -3,7 +3,7 @@
 ## Overview
 
 BenginIDS is an experimental framework rather than one pretrained model. It trains and compares
-binary intrusion-detection models on user-supplied labelled network records. No trained model is
+binary baselines and a multiclass behavior transformer on user-supplied network records. No trained model is
 distributed as a universal or production-ready champion.
 
 ## Supported models
@@ -11,17 +11,21 @@ distributed as a universal or production-ready champion.
 - Logistic regression, random forest, and LightGBM tabular models.
 - Optional 1D-CNN experiments.
 - Soft-voting and stacking ensembles.
-- A compact traffic transformer with masked-token pretraining and binary fine-tuning.
+- A compact traffic transformer with masked-token pretraining and multiclass behavior fine-tuning.
 - Grid, randomized, and Bayesian hyperparameter searches.
 
 Optional SHAP support can assist analysis but does not establish causal explanations.
 
 ## Inputs and outputs
 
-Inputs are labelled CSV/Parquet payload or flow records, including tables prepared from PCAP plus
-an external label manifest. The configured target defaults to `label` and is excluded from model
-features. Models produce an attack score approximating `P(y = 1 | X)`; a validation-selected
-threshold `tau` converts it into a binary prediction.
+Inputs are CSV/Parquet payload or flow records, including tables prepared from PCAP. Named runtime
+training defaults to `behavior_label`. The transformer produces behavior-class probabilities and
+reports the highest-ranked class, a second-ranked alternative, confidence, and observable flow
+evidence. This is a behavior hypothesis and not evidence of a person's actual intent.
+
+Missing labels may receive deterministic weak-supervision labels. These carry `*` in the training
+audit file and fall back to `UNKNOWN*`; they are not equivalent to ground truth and may encode the
+heuristics' biases.
 
 Artifacts may include fitted models, optimizer state, metrics, plots, tokenizer/checkpoint files,
 and experiment manifests. Generated binaries are excluded from version control.
@@ -55,6 +59,8 @@ network without local validation, and training on data with unknown provenance o
 - Imbalance can make accuracy and ROC-AUC deceptively strong.
 - Payload features can contain sensitive content or dataset-specific shortcuts.
 - Probability scores may become miscalibrated after environmental change.
+- Encrypted traffic, shared tools, and incomplete session context make intent non-identifiable.
+- Pseudo-label errors can be learned and amplified by the classifier.
 
 Validate on representative local data, prefer group/time-based splits, inspect false positives
 and negatives, calibrate thresholds, monitor drift, maintain human review and rollback paths, and

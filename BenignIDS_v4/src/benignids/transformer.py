@@ -127,8 +127,8 @@ def fine_tune_classifier(
     patience=3,
     seed=42,
 ):
-    """Supervised stage with validation PR-AUC early stopping."""
-    from sklearn.metrics import average_precision_score
+    """Supervised stage with validation accuracy early stopping for binary or multiclass labels."""
+    from sklearn.metrics import accuracy_score
 
     torch, nn, DataLoader, TensorDataset = _torch()
     torch.manual_seed(seed)
@@ -140,7 +140,7 @@ def fine_tune_classifier(
         torch.as_tensor(np.asarray(y_train), dtype=torch.long),
     )
     loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    counts = np.bincount(np.asarray(y_train, dtype=int), minlength=2)
+    counts = np.bincount(np.asarray(y_train, dtype=int), minlength=model.config.classes)
     weights = counts.sum() / np.maximum(counts, 1)
     loss_function = nn.CrossEntropyLoss(weight=torch.as_tensor(weights, dtype=torch.float32, device=device))
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -157,9 +157,9 @@ def fine_tune_classifier(
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             total += float(loss.detach())
-        y_score = predict_scores(model, val_input_ids, val_attention_mask, batch_size)
-        score = float(average_precision_score(y_val, y_score))
-        history.append({"epoch": epoch + 1, "loss": total / max(len(loader), 1), "val_pr_auc": score})
+        probabilities = predict_probabilities(model, val_input_ids, val_attention_mask, batch_size)
+        score = float(accuracy_score(y_val, probabilities.argmax(axis=1)))
+        history.append({"epoch": epoch + 1, "loss": total / max(len(loader), 1), "val_accuracy": score})
         if score > best_score + 1e-5:
             best_score = score
             best_state = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
@@ -174,6 +174,15 @@ def fine_tune_classifier(
 
 
 def predict_scores(model, input_ids, attention_mask, batch_size=128):
+    """Return positive-class scores for legacy binary callers."""
+    probabilities = predict_probabilities(model, input_ids, attention_mask, batch_size)
+    if probabilities.shape[1] != 2:
+        raise ValueError("predict_scores requires a binary classifier")
+    return probabilities[:, 1]
+
+
+def predict_probabilities(model, input_ids, attention_mask, batch_size=128):
+    """Return calibrated-like softmax outputs for every behavior class."""
     torch, _, DataLoader, TensorDataset = _torch()
     device = _device(torch)
     model.to(device)
@@ -183,12 +192,12 @@ def predict_scores(model, input_ids, attention_mask, batch_size=128):
     )
     loader = DataLoader(dataset, batch_size=batch_size)
     model.eval()
-    scores = []
+    probabilities = []
     with torch.no_grad():
         for batch_ids, batch_mask in loader:
             logits = model(batch_ids.to(device), batch_mask.to(device))
-            scores.extend(torch.softmax(logits, dim=1)[:, 1].cpu().numpy())
-    return np.asarray(scores)
+            probabilities.extend(torch.softmax(logits, dim=1).cpu().numpy())
+    return np.asarray(probabilities)
 
 
 def save_checkpoint(model, config: TransformerConfig, path: str | Path):
