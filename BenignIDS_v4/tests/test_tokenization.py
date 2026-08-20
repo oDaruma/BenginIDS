@@ -35,3 +35,18 @@ def test_frame_encoding_has_fixed_shape():
     X = pd.DataFrame({"payload_byte_1": [1, 2], "protocol": ["tcp", "udp"]})
     ids, attention = tokenizer.encode_frame(X)
     assert ids.shape == attention.shape == (2, 6)
+
+
+def test_tokenizer_round_trip(tmp_path):
+    original = TrafficTokenizer(
+        TokenizerConfig(vocab_size=2048, max_length=12, payload_prefix_bytes=8)
+    )
+    path = tmp_path / "tokenizer.json"
+    original.save(path)
+
+    restored = TrafficTokenizer.load(path)
+
+    assert restored.config == original.config
+    assert restored.encode_record({"protocol": "tcp", "payload": "0102"}) == original.encode_record(
+        {"protocol": "tcp", "payload": "0102"}
+    )

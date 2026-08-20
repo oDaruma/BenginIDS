@@ -4,6 +4,7 @@ import hashlib
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -94,6 +95,13 @@ class TrafficTokenizer:
     def save(self, path):
         with open(path, "w", encoding="utf-8") as handle:
             json.dump(self.config.__dict__, handle, indent=2)
+
+    @classmethod
+    def load(cls, path: str | Path) -> TrafficTokenizer:
+        path = Path(path)
+        with path.open(encoding="utf-8") as handle:
+            settings = json.load(handle)
+        return cls(TokenizerConfig(**settings))
 
 
 def mask_tokens(input_ids, attention_mask, mask_probability=0.15, random_state=42, vocab_size=16384):

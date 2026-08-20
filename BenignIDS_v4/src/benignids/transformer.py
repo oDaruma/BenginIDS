@@ -176,6 +176,7 @@ def fine_tune_classifier(
 def predict_scores(model, input_ids, attention_mask, batch_size=128):
     torch, _, DataLoader, TensorDataset = _torch()
     device = _device(torch)
+    model.to(device)
     dataset = TensorDataset(
         torch.as_tensor(input_ids, dtype=torch.long),
         torch.as_tensor(attention_mask, dtype=torch.long),
@@ -204,4 +205,3 @@ def load_checkpoint(path: str | Path):
     model = build_traffic_transformer(config)
     model.load_state_dict(checkpoint["state_dict"])
     return model, config
-

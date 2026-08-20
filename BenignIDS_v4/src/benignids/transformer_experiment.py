@@ -42,10 +42,13 @@ def _indices(y, test_size, validation_size, seed):
     return train, validation, test
 
 
-def run_transformer_experiment(config: dict, quick: bool = False) -> dict:
+def run_transformer_experiment(
+    config: dict, quick: bool = False, model_name: str | None = None
+) -> dict:
     seed = int(config["project"]["random_state"])
     tutorial = bool(config["project"].get("tutorial_mode", True))
-    output = Path(config["project"]["output_dir"]).resolve() / "transformer"
+    output_root = Path(config["project"]["output_dir"]).resolve()
+    output = output_root / "models" / model_name if model_name else output_root / "transformer"
     output.mkdir(parents=True, exist_ok=True)
     figures = output / "figures"
     tutorial_step(
@@ -190,12 +193,14 @@ def run_transformer_experiment(config: dict, quick: bool = False) -> dict:
         "Traffic-transformer confusion matrix",
     )
     tokenizer.save(output / "tokenizer.json")
-    save_checkpoint(model, model_config, output / "traffic_transformer.pt")
+    checkpoint_name = "model.pt" if model_name else "traffic_transformer.pt"
+    save_checkpoint(model, model_config, output / checkpoint_name)
     pd.DataFrame(pretraining).to_csv(output / "pretraining_history.csv", index=False)
     pd.DataFrame(fine_tuning).to_csv(output / "finetuning_history.csv", index=False)
     dump_json(metrics, output / "metrics.json")
     dump_json(
         {
+            "model_name": model_name,
             "input_mode": metrics["input_mode"],
             "rows": len(frame),
             "splits": {"train": len(train), "validation": len(validation), "test": len(test)},

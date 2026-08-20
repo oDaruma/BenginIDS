@@ -29,6 +29,11 @@ The PCAP path is a preparation stage: `prepare-pcap` aggregates labelled capture
 flow table, and the normal experiment commands then load that table through `data.path`. Raw PCAP
 files are not passed directly to a trainer.
 
+The named runtime path uses the same components in two constrained modes. `--train <csv> --model
+<name>` trains only from labelled CSV and stores the checkpoint, tokenizer, metrics, and manifest
+under `artifacts/models/<name>/`. `--run <pcap> --model <name>` builds unlabelled flows in memory,
+loads that bundle, applies its validation-selected threshold, and writes flow decisions to stdout.
+
 The v3.5.6 preprocessing fix remains a tested invariant. `ColumnTransformer` branches are appended
 only when their resolved column lists are non-empty. Dropping `ttl`, `total_len`, and `t_delta`
 therefore cannot produce an empty numerical pipeline failure.

@@ -73,6 +73,22 @@ appropriate when every relevant flow in a capture has the same ground-truth clas
 
 ## Run experiments
 
+Train a friendly-named traffic transformer from a labelled CSV, then use it to classify flows in a
+PCAP and print results to stdout:
+
+```bash
+cd BenignIDS_v4
+benignids --train data/training.csv --model unsw-transformer
+benignids --run captures/example.pcap --model unsw-transformer
+```
+
+Each training run is stored separately under `artifacts/models/<model-name>/`. PCAP inference is
+flow-level and reports malicious probability, the stored validation threshold, and a
+`BENIGN`/`MALICIOUS` decision. It requires the optional PCAP dependencies installed by `.[pcap]`
+or `.[all]`.
+
+The original experiment subcommands remain available:
+
 ```bash
 cd BenignIDS_v4
 

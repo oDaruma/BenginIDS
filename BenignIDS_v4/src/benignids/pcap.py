@@ -16,8 +16,13 @@ def load_label_manifest(path: str | Path) -> pd.DataFrame:
     return manifest
 
 
-def pcap_to_flows(pcap_path: str | Path, label: int, attack_cat: str = "unknown") -> pd.DataFrame:
-    """Aggregate a capture into bidirectional five-tuple flow records."""
+def pcap_to_flows(
+    pcap_path: str | Path, label: int | None = None, attack_cat: str = "unknown"
+) -> pd.DataFrame:
+    """Aggregate a capture into bidirectional five-tuple flow records.
+
+    Labels are required when building training data and omitted for inference captures.
+    """
     try:
         from scapy.all import IP, TCP, UDP, IPv6, PcapReader
     except ImportError as exc:
@@ -48,8 +53,7 @@ def pcap_to_flows(pcap_path: str | Path, label: int, attack_cat: str = "unknown"
     rows = []
     for (left, right, protocol), flow in flows.items():
         timestamps = flow["timestamps"]
-        rows.append(
-            {
+        row = {
                 "endpoint_a": left[0],
                 "port_a": left[1],
                 "endpoint_b": right[0],
@@ -59,11 +63,11 @@ def pcap_to_flows(pcap_path: str | Path, label: int, attack_cat: str = "unknown"
                 "total_len": flow["bytes"],
                 "duration": max(timestamps) - min(timestamps),
                 "payload": bytes(flow["payload"]).hex(),
-                "label": int(label),
-                "attack_cat": attack_cat,
                 "capture_id": Path(pcap_path).stem,
             }
-        )
+        if label is not None:
+            row.update({"label": int(label), "attack_cat": attack_cat})
+        rows.append(row)
     return pd.DataFrame(rows)
 
 

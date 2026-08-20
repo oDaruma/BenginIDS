@@ -60,6 +60,35 @@ stack is PyTorch 2.2.x with NumPy 1.26.x, so those versions are constrained in `
 Before running, change `data.path` in `configs/default.yaml` to an accessible CSV or Parquet file.
 The example path documents the legacy layout and is not expected to exist in a fresh clone.
 
+### Named transformer training and PCAP inference
+
+Train from a labelled CSV and store an independent, friendly-named model bundle:
+
+```bash
+benignids --train data/training.csv --model unsw-transformer
+```
+
+Add `--quick` for a small training budget or `--config path/to/config.yaml` to select another
+configuration. The CSV must contain the configured target column (`label` by default). Bundles are
+stored under `artifacts/models/<model-name>/` and contain `model.pt`, `tokenizer.json`,
+`metrics.json`, and `manifest.json`. Existing model names are not overwritten.
+
+Classify an authorized PCAP with a stored model:
+
+```bash
+benignids --run captures/example.pcap --model unsw-transformer
+```
+
+The command aggregates packets into bidirectional flows, prints each flow's malicious probability,
+decision threshold, and `BENIGN`/`MALICIOUS` result to stdout, then prints a summary. This is
+flow-level inference, not an independent classification of every packet. `.pcap` and `.pcapng`
+files are accepted.
+
+Model names must start with a letter or number and may contain letters, numbers, dots, underscores,
+and hyphens. Use the same `--config` at training and inference time when it changes `output_dir`.
+
+### Existing experiment commands
+
 Quick transformer demonstration:
 
 ```bash
@@ -85,8 +114,8 @@ benignids prepare-pcap \
 Then point `data.path` at the generated Parquet file. A PCAP does not normally contain its own
 ground-truth attack label; the manifest supplies capture-level labels.
 
-The current training commands read the configured `data.path`; selecting CSV versus prepared PCAP
-flow data is therefore a configuration choice, not a `--input-type` runtime flag.
+The existing experiment subcommands read the configured `data.path`. They remain available for
+model-comparison and teaching workflows alongside the named runtime modes above.
 
 ## Leakage-safe evaluation
 
