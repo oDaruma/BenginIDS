@@ -37,10 +37,32 @@ Capture-level labels are a simplification. If a file mixes benign and attack tra
 flow-level ground truth or split it into appropriately labelled captures. Random packet-row splits
 can leak near-duplicate flows; production experiments should split by capture/time/source host.
 
-`prepare-pcap` emits bidirectional five-tuple flow records with `src`, `dst`, `sport`, `dport`,
-`protocol`, packet and byte counts, duration, payload bytes, the supplied labels, and `capture_id`.
+`prepare-pcap` emits time-bounded bidirectional five-tuple session records with endpoints, ports,
+protocol, lifecycle state, directional packet and byte counts, timing/burst features, payload bytes,
+the supplied labels, and `capture_id`.
 PCAP support requires the optional `scapy` dependency; Parquet output requires a compatible pandas
 Parquet engine in the runtime environment.
+
+## Interaction-session model
+
+The interaction classifier consumes one row per time-bounded bidirectional session. Training rows
+require `interaction_label`; accepted values and aliases normalize to:
+
+- `HUMAN_INTERACTIVE`
+- `MACHINE_AUTOMATED`
+- `MIXED`
+- `UNKNOWN`
+
+Required numeric features are `duration`, `packets`, `total_len`, `forward_packets`,
+`reverse_packets`, `forward_bytes`, `reverse_bytes`, `packet_size_mean`, `packet_size_std`,
+`interarrival_mean`, `interarrival_std`, `interarrival_cv`, `packets_per_second`,
+`bytes_per_second`, `direction_changes`, `request_response_turns`, `burst_count`, `idle_fraction`,
+`timing_regularity`, `syn_count`, `fin_count`, and `rst_count`.
+
+Include `capture_id` whenever possible so evaluation can hold out complete captures. Labels should
+come from controlled endpoint-side evidence such as originating process telemetry and user-input
+records; those sources should create labels but should not be included as network-model features.
+Do not label encrypted traffic as human-driven solely from application or port assumptions.
 
 ## Validation and provenance
 

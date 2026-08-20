@@ -96,6 +96,38 @@ of human intent. `.pcap` and `.pcapng` files are accepted.
 Model names must start with a letter or number and may contain letters, numbers, dots, underscores,
 and hyphens. Use the same `--config` at training and inference time when it changes `output_dir`.
 
+### Human-interactive versus machine-automated sessions
+
+PCAP ingestion also produces time-bounded bidirectional sessions with timing, direction,
+request/response-turn, burst, idle, packet-size, throughput, and TCP lifecycle features. Train a
+separate interaction model from labelled session rows:
+
+```bash
+benignids train-interaction \
+  --csv data/labelled_sessions.csv \
+  --model interaction-v1
+```
+
+The CSV must contain the session features documented in
+[`docs/data_contract.md`](docs/data_contract.md) and an `interaction_label` with one of
+`HUMAN_INTERACTIVE`, `MACHINE_AUTOMATED`, `MIXED`, or `UNKNOWN`. Use multiple captures, devices,
+users, and time periods; when `capture_id` is present, evaluation holds out complete captures to
+reduce leakage.
+
+Classify sessions reconstructed from an authorized capture:
+
+```bash
+benignids classify-interaction \
+  --pcap captures/example.pcap \
+  --model interaction-v1 \
+  --minimum-confidence 0.60 \
+  --session-timeout 300
+```
+
+Predictions at or below the confidence threshold abstain to `UNKNOWN`. These labels estimate the
+interaction style visible in a session; they do not establish human identity, intent, or whether
+background software was triggered by a person.
+
 ### Existing experiment commands
 
 Quick transformer demonstration:

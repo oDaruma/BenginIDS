@@ -4,10 +4,18 @@ import argparse
 from copy import deepcopy
 from pathlib import Path
 
+import pandas as pd
+
 from .config import load_config
 from .experiment import run_experiment
 from .inference import classify_pcap, model_bundle_path, print_pcap_results
-from .pcap import build_flow_dataset
+from .interaction import (
+    classify_interaction_sessions,
+    interaction_bundle_path,
+    print_interaction_results,
+    train_interaction_model,
+)
+from .pcap import build_flow_dataset, pcap_to_flows
 from .transformer_experiment import run_transformer_experiment
 
 
@@ -32,6 +40,21 @@ def build_parser() -> argparse.ArgumentParser:
     pcap = subparsers.add_parser("prepare-pcap", help="convert labelled PCAP captures to flows")
     pcap.add_argument("--manifest", required=True)
     pcap.add_argument("--output", required=True)
+    interaction_train = subparsers.add_parser(
+        "train-interaction", help="train a human/machine session interaction classifier"
+    )
+    interaction_train.add_argument("--csv", required=True, help="labelled session-feature CSV")
+    interaction_train.add_argument("--model", required=True)
+    interaction_train.add_argument("--target", default="interaction_label")
+    interaction_train.add_argument("--config", default="configs/default.yaml")
+    interaction_classify = subparsers.add_parser(
+        "classify-interaction", help="classify interaction style for sessions in a PCAP"
+    )
+    interaction_classify.add_argument("--pcap", required=True)
+    interaction_classify.add_argument("--model", required=True)
+    interaction_classify.add_argument("--minimum-confidence", type=float, default=0.60)
+    interaction_classify.add_argument("--session-timeout", type=float, default=300.0)
+    interaction_classify.add_argument("--config", default="configs/default.yaml")
     return parser
 
 
@@ -72,6 +95,33 @@ def main() -> None:
         output.parent.mkdir(parents=True, exist_ok=True)
         build_flow_dataset(args.manifest).to_parquet(output, index=False)
         print(f"Wrote labelled flow records to {output}")
+    elif args.command == "train-interaction":
+        config = load_config(Path(args.config))
+        bundle = interaction_bundle_path(config["project"]["output_dir"], args.model)
+        if bundle.exists():
+            parser.error(f"interaction model '{args.model}' already exists at {bundle}")
+        frame = pd.read_csv(args.csv)
+        manifest = train_interaction_model(
+            frame,
+            config["project"]["output_dir"],
+            args.model,
+            target=args.target,
+            random_state=int(config["project"].get("random_state", 42)),
+        )
+        print(f"Stored interaction model bundle: {bundle}")
+        print(manifest)
+    elif args.command == "classify-interaction":
+        config = load_config(Path(args.config))
+        sessions = pcap_to_flows(args.pcap, session_timeout=args.session_timeout)
+        if sessions.empty:
+            parser.error(f"no IP sessions found in {args.pcap}")
+        results = classify_interaction_sessions(
+            sessions,
+            config["project"]["output_dir"],
+            args.model,
+            minimum_confidence=args.minimum_confidence,
+        )
+        print_interaction_results(results.drop(columns=["payload"], errors="ignore"))
     else:
         parser.error("choose --train, --run, or one of the legacy subcommands")
 
