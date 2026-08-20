@@ -1,7 +1,0 @@
-{
-  "best_tree_val_acc": 0.0,
-  "best_tree_name": "unknown",
-  "cnn_val_acc": 0.945661963374362,
-  "n_reports": 15,
-  "n_models": 4
-}

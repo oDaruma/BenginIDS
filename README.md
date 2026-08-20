@@ -1,141 +1,161 @@
-# BenginIDS
+# BenignIDS v4
 
-BenginIDS is a teaching-oriented intrusion-detection project for experimenting with labelled
-network payload and flow data. The current implementation lives in [`BenignIDS_v4`](BenignIDS_v4/)
-and provides reproducible tabular baselines, hyperparameter optimization, ensembles, a 1D-CNN,
-and a compact traffic transformer.
+This repository contains the current BenignIDS implementation. The obsolete pre-v4 notebook
+pipelines have been removed so the package, tests, teaching notebooks, and documentation share
+one canonical layout.
 
-The project is designed for research and learning. It is not a production IDS and it does not
-ship raw captures, large datasets, or trained-model binaries.
+BenignIDS v4 is a teaching-oriented intrusion-detection project for learning from network
+payload/flow records derived from PCAP. Its primary model is a compact traffic transformer with
+two stages:
 
-## Features
+1. self-supervised masked-token pretraining on unlabelled traffic; and
+2. supervised fine-tuning for a documented network-behavior taxonomy.
 
-- CSV and Parquet loaders for labelled payload/flow records.
-- Labelled PCAP ingestion through a manifest containing `pcap_path`, `label`, and optional
-  `attack_cat` fields.
-- Leakage-aware train, validation, and test partitions.
-- Logistic regression, random forest, LightGBM, 1D-CNN, soft-voting, and stacking comparisons.
-- Grid, randomized, and Bayesian hyperparameter searches using average precision.
-- A traffic transformer with masked-token pretraining followed by supervised behavior
-  classification (`BENIGN`, `RECONNAISSANCE`, `BRUTE_FORCE`, `C2_BEACONING`, `EXFILTRATION`,
-  `EXPLOITATION`, `DOS`, or `UNKNOWN`).
-- Validation-set decision-threshold selection, PR-AUC, calibration, confusion matrices, and
-  reproducible experiment manifests.
-- Teaching notebooks connecting the implementation to core machine-learning concepts.
+A Bayesian-optimized LightGBM pipeline is the principal non-transformer baseline. Grid search,
+random search, logistic regression, random forests, a 1D-CNN, soft voting, and stacking show how
+different training and optimization methods behave on the same splits.
 
-## Repository layout
+## Evidence boundary
 
-```text
-BenignIDS_v4/       current Python package, CLI, tests, notebooks, and documentation
-BenignIDS_pre3/     legacy notebook pipeline retained for historical reference
-Label_Trainer*.ipynb
-                    earlier standalone notebook experiments
-data_sheet.md       dataset provenance, schema, use, and risk notes
-model_card.md       supported model families, evaluation, and limitations
-```
+The legacy `Payload_data_UNSW.csv` is derived from packet captures but is not a raw PCAP stream.
+It is not distributed in this repository. When supplied separately, the loader reads the first
+configured payload-byte prefix and maps `benign` or `normal` to zero and other named categories to
+one. PCAP ingestion is supported only with raw captures and a label manifest supplied by the user.
+
+## Course alignment
+
+The notebooks follow the notation used in the supplied Imperial College learning notebook:
+`X`, `y`, `X_train`, `X_val`, `X_test`, `y_score`, and decision threshold `tau` (`τ`). They connect:
+
+- probability and uncertainty to calibrated attack probabilities;
+- train/validation/test sets and stratified cross-validation to leakage prevention;
+- standardization and PCA to dimensionality reduction;
+- bias–variance and class imbalance to model selection and PR-AUC;
+- grid, random, and Bayesian search to black-box optimization;
+- acquisition functions to exploration versus exploitation;
+- neural networks to the 1D-CNN and transformer benchmarks;
+- bagging, soft voting, and stacking to variance reduction and meta-learning;
+- Monte Carlo masking/noise experiments to robustness under uncertainty.
+
+See [docs/course_mapping.md](docs/course_mapping.md) for the detailed mapping.
 
 ## Installation
 
-Python 3.12 is supported for the current implementation.
+Use an isolated environment because the host Python installation may contain incompatible NumPy
+binary packages.
 
 ```bash
-cd BenignIDS_v4
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e '.[all]'
 ```
 
-Install only the base package if transformer, PCAP, SHAP, and notebook extras are not needed:
+Python 3.12 is the supported runtime. The package metadata rejects older Python versions to keep
+the scientific and PyTorch dependency stack consistent. On Intel macOS, the available compatible
+stack is PyTorch 2.2.x with NumPy 1.26.x, so those versions are constrained in `pyproject.toml`.
+
+## Run
+
+Before running, change `data.path` in `configs/default.yaml` to an accessible CSV or Parquet file.
+The example path documents the legacy layout and is not expected to exist in a fresh clone.
+
+### Named transformer training and PCAP inference
+
+Train from a labelled CSV and store an independent, friendly-named model bundle:
 
 ```bash
-python -m pip install -e .
+benignids --train data/training.csv --model unsw-transformer
 ```
 
-## Provide training data
+Add `--quick` for a small training budget or `--config path/to/config.yaml` to select another
+configuration. The behavior target is `behavior_label` by default and is configurable through
+`data.behavior_target`. Supported classes are `BENIGN`, `RECONNAISSANCE`, `BRUTE_FORCE`,
+`C2_BEACONING`, `EXFILTRATION`, `EXPLOITATION`, `DOS`, and `UNKNOWN`. Bundles are
+stored under `artifacts/models/<model-name>/` and contain `model.pt`, `tokenizer.json`,
+`metrics.json`, `manifest.json`, and `training_labels.csv`. Existing model names are not
+overwritten.
 
-Large data files are excluded from Git. Set `data.path` in `BenignIDS_v4/configs/default.yaml`
-to a CSV or Parquet dataset that follows the [data contract](BenignIDS_v4/docs/data_contract.md).
-Named transformer training uses `behavior_label` by default. Missing values are conservatively
-pseudo-labelled from observable fields, written to `training_labels.csv` with a trailing `*`, and
-fall back to `UNKNOWN*` when there is insufficient evidence. Pseudo-labels are not ground truth.
+If the target column or an individual value is absent, BenginIDS attempts a conservative
+rule-based pseudo-label from observable fields. Generated values carry `*` in
+`training_labels.csv`; when no defensible rule matches, the value is `UNKNOWN*`. The classifier
+trains on the underlying class without the marker, while the audit file and manifest retain
+pseudo-label provenance. Review or replace pseudo-labels before serious evaluation.
 
-Raw PCAP files require external labels. Create a manifest such as
-[`BenignIDS_v4/examples/pcap_labels.csv`](BenignIDS_v4/examples/pcap_labels.csv), then prepare a
-labelled flow dataset:
+Classify an authorized PCAP with a stored model:
 
 ```bash
-cd BenignIDS_v4
+benignids --run captures/example.pcap --model unsw-transformer
+```
+
+The command aggregates packets into bidirectional flows and prints the most probable behavior,
+confidence, second-ranked alternative, and observable evidence to stdout. This is flow-level
+behavior-hypothesis generation, not an independent classification of every packet and not proof
+of human intent. `.pcap` and `.pcapng` files are accepted.
+
+Model names must start with a letter or number and may contain letters, numbers, dots, underscores,
+and hyphens. Use the same `--config` at training and inference time when it changes `output_dir`.
+
+### Existing experiment commands
+
+Quick transformer demonstration:
+
+```bash
+benignids train-transformer --config configs/default.yaml --quick
+```
+
+Model and optimization comparison:
+
+```bash
+benignids run --config configs/default.yaml --quick
+```
+
+Remove `--quick` for the configured full experiment. The full Bayesian search can be expensive.
+
+True PCAP ingestion requires a CSV manifest like `examples/pcap_labels.csv`:
+
+```bash
 benignids prepare-pcap \
   --manifest examples/pcap_labels.csv \
   --output data/labelled_flows.parquet
 ```
 
-Point `data.path` at the generated Parquet file before training. Capture-level labels are only
-appropriate when every relevant flow in a capture has the same ground-truth class.
+Then point `data.path` at the generated Parquet file. A PCAP does not normally contain its own
+ground-truth attack label; the manifest supplies capture-level labels.
 
-## Run experiments
+The existing experiment subcommands read the configured `data.path`. They remain available for
+model-comparison and teaching workflows alongside the named runtime modes above.
 
-Train a friendly-named behavior transformer from CSV, then use it to describe probable behavior
-for flows in a PCAP and print results to stdout:
+## Leakage-safe evaluation
 
-```bash
-cd BenignIDS_v4
-benignids --train data/training.csv --model unsw-transformer
-benignids --run captures/example.pcap --model unsw-transformer
+- `X_train` fits model parameters and self-supervised representations.
+- Cross-validation inside `X_train` chooses hyperparameters.
+- `X_val` chooses `τ` for maximum F1 or a minimum-precision regime.
+- `X_test` is evaluated once after all choices are fixed.
+- PR-AUC (average precision) is primary because accuracy and ROC-AUC can be misleading under
+  severe imbalance.
+
+Artifacts include model files, optimizer parameters, metrics, split counts, feature schemas,
+training histories, and a manifest. Generated values are experimental results; this repository
+does not hard-code or claim the earlier approximately 0.95 PR-AUC result.
+
+See the [datasheet](docs/data_sheet.md) and [model card](docs/model_card.md) for
+provenance requirements, supported uses, and operational limitations.
+
+## Layout
+
+```text
+configs/                 experiment configuration
+docs/                    course, architecture and data documentation
+examples/                PCAP label-manifest example
+notebooks/               executable teaching sequence
+src/benignids/           reusable package and CLI
+tests/                    behavior and regression tests
+artifacts/                generated outputs (gitignored)
 ```
 
-Each training run is stored separately under `artifacts/models/<model-name>/`. PCAP inference is
-flow-level and reports a probable behavior, confidence, alternative hypothesis, and observable
-flow evidence. These are behavior hypotheses—not proof of malicious intent. It requires the
-optional PCAP dependencies installed by `.[pcap]` or `.[all]`.
+## Safety and operational scope
 
-The original experiment subcommands remain available:
-
-```bash
-cd BenignIDS_v4
-
-# Fast transformer smoke experiment
-benignids train-transformer --config configs/default.yaml --quick
-
-# Fast tabular model and optimization comparison
-benignids run --config configs/default.yaml --quick
-```
-
-Remove `--quick` for the configured experiment budgets. Full optimization and transformer
-training can be computationally expensive.
-
-## Evaluation policy
-
-- Model parameters and representations are learned from the training partition.
-- Hyperparameters are selected through cross-validation within training data.
-- The validation partition selects the decision threshold `tau` (`τ`).
-- The test partition is reserved for final evaluation.
-- Average precision/PR-AUC is primary because accuracy can be misleading under class imbalance.
-
-Results depend on the supplied dataset, split, seed, configuration, and software environment.
-This repository makes no universal performance claim and does not treat legacy notebook metrics
-as validated v4 results.
-
-## Documentation
-
-- [BenignIDS v4 guide](BenignIDS_v4/README.md)
-- [Architecture](BenignIDS_v4/docs/architecture.md)
-- [Data contract](BenignIDS_v4/docs/data_contract.md)
-- [Course mapping](BenignIDS_v4/docs/course_mapping.md)
-- [Dataset datasheet](data_sheet.md)
-- [Model card](model_card.md)
-
-## Safety and privacy
-
-Use only traffic you are authorized to inspect. Packet captures and payload-derived fields may
-contain sensitive information even when this repository does not include them. Review provenance,
-licensing, retention, and privacy requirements before collecting, sharing, or training on traffic.
-Do not deploy generated models as autonomous security controls without site-specific validation,
-monitoring, and human oversight.
-
-## Legacy material
-
-`BenignIDS_pre3` and the root `Label_Trainer*.ipynb` files are retained to preserve the evolution
-of the project. They may use older dependency versions, paths, schemas, and experimental claims.
-Use `BenignIDS_v4` for current development.
+Live capture is deliberately not automatic: capturing network traffic may require elevated
+privileges and authorization. Use only captures you are permitted to inspect. This project is a
+research/training IDS, not a drop-in production control.

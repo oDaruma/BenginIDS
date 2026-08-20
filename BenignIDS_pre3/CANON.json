@@ -1,7 +1,0 @@
-{
-  "RANDOM_STATE": 42,
-  "DATA_PATH": "archive/Payload_data_UNSW.csv",
-  "TARGET_COL": "label",
-  "STAGE_ROOT": "staging",
-  "OUT_ROOT": "out"
-}

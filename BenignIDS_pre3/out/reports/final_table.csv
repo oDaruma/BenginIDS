@@ -1,3 +1,0 @@
-model,status,ap,f1_at_tau,tau_star,precision,recall,cm_tn_fp_fn_tp,notes
-LightGBM (report),selected,–,–,–,–,–,,
-CNN,pending,–,–,–,–,–,,CNN metrics unavailable — run Section 2.1 (payload sequence) and Section 7 (CNN training).

@@ -1,3 +1,0 @@
-candidate,split,AP,ROC,F1,P,R
-BASELINE,val,0.0,0.5,0.0,0.0,0.0
-BASELINE,test,0.0,0.5,0.0,0.0,0.0

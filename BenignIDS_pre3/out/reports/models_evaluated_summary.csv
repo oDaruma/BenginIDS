@@ -1,4 +1,0 @@
-model,artifact,error,AP_val,ROC_val,AP_test,ROC_test,n_val,n_test
-baseline,baseline,"X has 1 features, but LogisticRegression is expecting 23 features as input.",,,,,,
-champion_model,champion_model,,0.0,0.5,0.0,0.5,500.0,500.0
-L1_DUMMY,L1_DUMMY,,0.0,0.5,0.0,0.5,500.0,500.0

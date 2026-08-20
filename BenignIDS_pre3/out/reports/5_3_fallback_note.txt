@@ -1,1 +1,0 @@
-5.3 fallback used → single-class y (classes=[0], counts=[55916])

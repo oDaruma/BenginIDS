@@ -1,7 +1,0 @@
-name,n,AP,ROC,F1,P,R,artifact,verified_range_ok
-baseline_test,11983,0.0,0.5,0.0,0.0,0.0,baseline_model.joblib,True
-baseline_val,11982,0.0,0.5,0.0,0.0,0.0,baseline_model.joblib,True
-champion_test:champion_model.joblib,11983,0.0,0.5,0.0,0.0,0.0,champion_model.joblib,True
-champion_test:champion_pipeline.joblib,11983,0.0,0.5,0.0,0.0,0.0,champion_pipeline.joblib,True
-champion_val:champion_model.joblib,11982,0.0,0.5,0.0,0.0,0.0,champion_model.joblib,True
-champion_val:champion_pipeline.joblib,11982,0.0,0.5,0.0,0.0,0.0,champion_pipeline.joblib,True

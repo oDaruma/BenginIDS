@@ -1,1 +1,0 @@
-Skipped LGBM BO: labels are globally single-class (no positives or no negatives).

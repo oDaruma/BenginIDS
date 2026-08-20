@@ -16,7 +16,7 @@ or making fully autonomous enforcement decisions.
 Named transformer training prefers `behavior_label` and may contain ordered
 `payload_byte_1 ... payload_byte_N` fields, numerical or categorical flow metadata, and an
 optional `attack_cat`. The behavior taxonomy is documented in the
-[v4 data contract](BenignIDS_v4/docs/data_contract.md).
+[v4 data contract](data_contract.md).
 
 When a behavior label is absent, a deterministic heuristic may generate one. Generated labels are
 marked with `*` in the audit artifact and default to `UNKNOWN*` when evidence is insufficient.
