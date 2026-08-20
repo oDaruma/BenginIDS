@@ -1,3 +1,10 @@
+# Legacy pre-v4 dependencies
+
+> These historical pins reproduce the archived notebook environment and may conflict with the
+> supported v4 Python 3.12 stack. New installations should use
+> [`BenignIDS_v4/pyproject.toml`](../../BenignIDS_v4/pyproject.toml).
+
+```text
 # Core scientific stack
 numpy==2.1.0
 pandas==2.2.2
@@ -27,3 +34,4 @@ seaborn==0.13.2
 # Jupyter / notebook
 ipykernel==6.29.5
 notebook==7.2.1
+```

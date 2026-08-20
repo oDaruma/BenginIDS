@@ -1,46 +1,122 @@
-# Label_Trainer — Intrusion Detection Model Pipeline
+# BenginIDS
 
-## Non‑technical explanation
-This project trains a machine‑learning model to spot suspicious network activity (like lateral movement or zero‑day‑style behavior) from flow/payload statistics. We feed past examples of **benign** vs **attack** traffic to the model so it can learn patterns, then set a **decision threshold (τ)** that balances catching more true attacks with keeping false alarms low for SOC analysts.
+BenginIDS is a teaching-oriented intrusion-detection project for experimenting with labelled
+network payload and flow data. The current implementation lives in [`BenignIDS_v4`](BenignIDS_v4/)
+and provides reproducible tabular baselines, hyperparameter optimization, ensembles, a 1D-CNN,
+and a compact traffic transformer.
 
-## Data
-- Original dateset obtained from `UNSW-NB15 and CIC-IDS2017 Labelled PCAP Data` (https://www.kaggle.com/datasets/yasiralifarrukh/unsw-and-cicids2017-labelled-pcap-data/code/data)
-- Source file expected at: `archive/Payload_data_UNSW.csv` (tabular flow/payload features with binary labels).
-- Features are aggregated statistics per flow/session; no raw packet contents or personal identifiers are included.
-- Train/validation/test splits are **stratified** to preserve class balance. Intermediate splits and artifacts are stored under `staging/` for reproducibility.
+The project is designed for research and learning. It is not a production IDS and it does not
+ship raw captures, large datasets, or trained-model binaries.
 
-## Model
-- **Primary:** LightGBM classifier (gradient‑boosted trees) chosen for strong tabular performance, speed, and native handling of non‑linear interactions.
-- **Secondary (optional):** CNN baseline for derived representations.
-- **Decision rule:** predict attack when \( $\hat p \ge \tau$ \); **τ** is chosen to **maximize F1** on the validation set.
+## Features
 
-## Hyperparameter optimisation
-- **Manual grid (parallel):** Exploratory search with `joblib.Parallel` (multi‑threaded).
-- **Bayesian optimization:** `skopt` (BayesSearchCV / ask‑tell) with checkpointing and resume.
-- Global concurrency via `N_THREADS`; models set `n_jobs=-1` when supported.
+- CSV and Parquet loaders for labelled payload/flow records.
+- Labelled PCAP ingestion through a manifest containing `pcap_path`, `label`, and optional
+  `attack_cat` fields.
+- Leakage-aware train, validation, and test partitions.
+- Logistic regression, random forest, LightGBM, 1D-CNN, soft-voting, and stacking comparisons.
+- Grid, randomized, and Bayesian hyperparameter searches using average precision.
+- A traffic transformer with masked-token pretraining followed by supervised fine-tuning.
+- Validation-set decision-threshold selection, PR-AUC, calibration, confusion matrices, and
+  reproducible experiment manifests.
+- Teaching notebooks connecting the implementation to core machine-learning concepts.
 
-## Results
+## Repository layout
 
-
-
-### Champion: LightGBM_BO_Enhanced (stage: `bo_enhanced`)
-- **Dataset**: archive/Payload_data_UNSW.csv
-- **AUPRC**: 0.9999 | **F1@τ**: 0.9997 | **τ**: 0.050
-- **Seed**: 42 | **Updated**: 2025-08-29 07:41:58Z
-- **Params**:
-
-```json
-{
-  "num_leaves": 118,
-  "max_depth": 12,
-  "min_child_samples": 21,
-  "subsample": 0.9012640129099659,
-  "colsample_bytree": 0.8659965652378008,
-  "learning_rate": 0.050602060132694665,
-  "reg_lambda": 0.8973465609044181
-}
+```text
+BenignIDS_v4/       current Python package, CLI, tests, notebooks, and documentation
+BenignIDS_pre3/     legacy notebook pipeline retained for historical reference
+Label_Trainer*.ipynb
+                    earlier standalone notebook experiments
+data_sheet.md       dataset provenance, schema, use, and risk notes
+model_card.md       supported model families, evaluation, and limitations
 ```
 
+## Installation
 
-## Profile
-https://www.linkedin.com/in/maxchowhk
+Python 3.12 is supported for the current implementation.
+
+```bash
+cd BenignIDS_v4
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[all]'
+```
+
+Install only the base package if transformer, PCAP, SHAP, and notebook extras are not needed:
+
+```bash
+python -m pip install -e .
+```
+
+## Provide training data
+
+Large data files are excluded from Git. Set `data.path` in `BenignIDS_v4/configs/default.yaml`
+to a CSV or Parquet dataset that follows the [data contract](BenignIDS_v4/docs/data_contract.md).
+The target column defaults to `label`; benign/normal values map to `0`, and other named classes
+map to `1`.
+
+Raw PCAP files require external labels. Create a manifest such as
+[`BenignIDS_v4/examples/pcap_labels.csv`](BenignIDS_v4/examples/pcap_labels.csv), then prepare a
+labelled flow dataset:
+
+```bash
+cd BenignIDS_v4
+benignids prepare-pcap \
+  --manifest examples/pcap_labels.csv \
+  --output data/labelled_flows.parquet
+```
+
+Point `data.path` at the generated Parquet file before training. Capture-level labels are only
+appropriate when every relevant flow in a capture has the same ground-truth class.
+
+## Run experiments
+
+```bash
+cd BenignIDS_v4
+
+# Fast transformer smoke experiment
+benignids train-transformer --config configs/default.yaml --quick
+
+# Fast tabular model and optimization comparison
+benignids run --config configs/default.yaml --quick
+```
+
+Remove `--quick` for the configured experiment budgets. Full optimization and transformer
+training can be computationally expensive.
+
+## Evaluation policy
+
+- Model parameters and representations are learned from the training partition.
+- Hyperparameters are selected through cross-validation within training data.
+- The validation partition selects the decision threshold `tau` (`τ`).
+- The test partition is reserved for final evaluation.
+- Average precision/PR-AUC is primary because accuracy can be misleading under class imbalance.
+
+Results depend on the supplied dataset, split, seed, configuration, and software environment.
+This repository makes no universal performance claim and does not treat legacy notebook metrics
+as validated v4 results.
+
+## Documentation
+
+- [BenignIDS v4 guide](BenignIDS_v4/README.md)
+- [Architecture](BenignIDS_v4/docs/architecture.md)
+- [Data contract](BenignIDS_v4/docs/data_contract.md)
+- [Course mapping](BenignIDS_v4/docs/course_mapping.md)
+- [Dataset datasheet](data_sheet.md)
+- [Model card](model_card.md)
+
+## Safety and privacy
+
+Use only traffic you are authorized to inspect. Packet captures and payload-derived fields may
+contain sensitive information even when this repository does not include them. Review provenance,
+licensing, retention, and privacy requirements before collecting, sharing, or training on traffic.
+Do not deploy generated models as autonomous security controls without site-specific validation,
+monitoring, and human oversight.
+
+## Legacy material
+
+`BenignIDS_pre3` and the root `Label_Trainer*.ipynb` files are retained to preserve the evolution
+of the project. They may use older dependency versions, paths, schemas, and experimental claims.
+Use `BenignIDS_v4` for current development.

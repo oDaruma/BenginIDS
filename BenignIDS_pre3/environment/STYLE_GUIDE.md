@@ -1,5 +1,9 @@
 # Notebook Section Structure — Updated v2.4.5
 
+> **Legacy documentation:** These conventions apply only to `BenignIDS_pre3` notebooks. The
+> current Python package and teaching notebooks are documented in
+> [`BenignIDS_v4`](../../BenignIDS_v4/README.md).
+
 The notebook must follow this ordered section structure.  
 Each section has a markdown header (`## Section X — ...`) and a bannered code cell.
 

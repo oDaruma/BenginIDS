@@ -1,5 +1,8 @@
 # BenignIDS v4
 
+> Current implementation for the [BenginIDS repository](../README.md). Legacy notebooks are
+> retained separately under `BenignIDS_pre3` and are not the source of truth for this package.
+
 BenignIDS v4 is a teaching-oriented intrusion-detection project for learning from network
 payload/flow records derived from PCAP. Its primary model is a compact traffic transformer with
 two stages:
@@ -13,11 +16,10 @@ different training and optimization methods behave on the same splits.
 
 ## Evidence boundary
 
-The archived `Payload_data_UNSW.csv` is derived from packet captures but is not a raw PCAP stream.
-It contains 1,500 ordered payload-byte fields, packet metadata, and an attack-category `label`.
-The default configuration reads the first 256 bytes and maps `benign` or `normal` to zero and all
-other categories to one. A separate PCAP ingestion command is included, but direct PCAP training
-cannot be claimed until raw captures and a label manifest are supplied.
+The legacy `Payload_data_UNSW.csv` is derived from packet captures but is not a raw PCAP stream.
+It is not distributed in this repository. When supplied separately, the loader reads the first
+configured payload-byte prefix and maps `benign` or `normal` to zero and other named categories to
+one. PCAP ingestion is supported only with raw captures and a label manifest supplied by the user.
 
 ## Course alignment
 
@@ -55,6 +57,9 @@ stack is PyTorch 2.2.x with NumPy 1.26.x, so those versions are constrained in `
 
 ## Run
 
+Before running, change `data.path` in `configs/default.yaml` to an accessible CSV or Parquet file.
+The example path documents the legacy layout and is not expected to exist in a fresh clone.
+
 Quick transformer demonstration:
 
 ```bash
@@ -80,6 +85,9 @@ benignids prepare-pcap \
 Then point `data.path` at the generated Parquet file. A PCAP does not normally contain its own
 ground-truth attack label; the manifest supplies capture-level labels.
 
+The current training commands read the configured `data.path`; selecting CSV versus prepared PCAP
+flow data is therefore a configuration choice, not a `--input-type` runtime flag.
+
 ## Leakage-safe evaluation
 
 - `X_train` fits model parameters and self-supervised representations.
@@ -92,6 +100,9 @@ ground-truth attack label; the manifest supplies capture-level labels.
 Artifacts include model files, optimizer parameters, metrics, split counts, feature schemas,
 training histories, and a manifest. Generated values are experimental results; this repository
 does not hard-code or claim the earlier approximately 0.95 PR-AUC result.
+
+See the repository-level [datasheet](../data_sheet.md) and [model card](../model_card.md) for
+provenance requirements, supported uses, and operational limitations.
 
 ## Layout
 

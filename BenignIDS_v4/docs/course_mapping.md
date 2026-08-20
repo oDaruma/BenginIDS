@@ -1,7 +1,8 @@
 # Imperial College course mapping
 
 This mapping is based on the connected course notebook and its listed course sources. It uses the
-same conventional variable notation in code samples.
+same conventional variable notation in code samples. It describes teaching coverage, not an
+accreditation claim or evidence that every optional model is suitable for production.
 
 | Course concept | BenignIDS v4 demonstration |
 |---|---|
@@ -34,8 +35,10 @@ and converts probabilities into decisions using
 `tau` is selected on `X_val`, never on `X_test`. For rare threats, the central comparison is the
 precision–recall curve and its area (average precision), not raw accuracy.
 
+The current implementation uses random stratified partitions. Capture-, host-, or time-grouped
+evaluation is recommended when correlated records could cross partition boundaries.
+
 Bayesian optimization chooses the next hyperparameter vector `theta` by maximizing an acquisition
 function `a(theta)`. The surrogate's uncertainty supports exploration, while its predicted high
 score supports exploitation. This is analogous to a bandit trade-off but is not itself a learned
 SOC response policy.
-
