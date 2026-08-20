@@ -1,0 +1,6 @@
+{
+  "status": "ok",
+  "ap_val": 1.0,
+  "best_iteration": 1,
+  "model_path": "out/models/lgbm_baseline.txt"
+}

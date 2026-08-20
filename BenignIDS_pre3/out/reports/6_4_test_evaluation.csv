@@ -1,0 +1,2 @@
+name,n,AP,ROC,F1,P,R
+TEST::champion_model.joblib,2000,0.11,0.5,0.0,0.0,0.0

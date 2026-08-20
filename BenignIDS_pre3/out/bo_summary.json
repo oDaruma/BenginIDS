@@ -1,0 +1,14 @@
+{
+  "best_val_ap": 0.9994256137309605,
+  "best_params": {
+    "learning_rate": 0.013411887180846306,
+    "num_leaves": 249,
+    "max_depth": 11,
+    "min_child_samples": 89,
+    "feature_fraction": 0.8899757975958067,
+    "bagging_fraction": 0.9172026325424582,
+    "lambda_l1": 0.3449578384769237,
+    "lambda_l2": 0.44200930950555223
+  },
+  "calls": 20
+}

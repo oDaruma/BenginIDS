@@ -1,0 +1,27 @@
+{
+  "model_names": [
+    "DUMMY"
+  ],
+  "n_train": 1000,
+  "oof_shape": [
+    1000,
+    1
+  ],
+  "val_shape": [
+    500,
+    1
+  ],
+  "test_shape": [
+    500,
+    1
+  ],
+  "single_class": true,
+  "y_train_dist": [
+    [
+      0
+    ],
+    [
+      1000
+    ]
+  ]
+}

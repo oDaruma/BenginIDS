@@ -1,0 +1,2 @@
+fallback,reason,estimator
+True,"single-class y (classes=[0], counts=[55916])",DummyClassifier(prior)

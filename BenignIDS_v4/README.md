@@ -1,0 +1,112 @@
+# BenignIDS v4
+
+BenignIDS v4 is a teaching-oriented intrusion-detection project for learning from network
+payload/flow records derived from PCAP. Its primary model is a compact traffic transformer with
+two stages:
+
+1. self-supervised masked-token pretraining on unlabelled traffic; and
+2. supervised fine-tuning for `0 = benign/normal`, `1 = attack/suspicious`.
+
+A Bayesian-optimized LightGBM pipeline is the principal non-transformer baseline. Grid search,
+random search, logistic regression, random forests, a 1D-CNN, soft voting, and stacking show how
+different training and optimization methods behave on the same splits.
+
+## Evidence boundary
+
+The archived `Payload_data_UNSW.csv` is derived from packet captures but is not a raw PCAP stream.
+It contains 1,500 ordered payload-byte fields, packet metadata, and an attack-category `label`.
+The default configuration reads the first 256 bytes and maps `benign` or `normal` to zero and all
+other categories to one. A separate PCAP ingestion command is included, but direct PCAP training
+cannot be claimed until raw captures and a label manifest are supplied.
+
+## Course alignment
+
+The notebooks follow the notation used in the supplied Imperial College learning notebook:
+`X`, `y`, `X_train`, `X_val`, `X_test`, `y_score`, and decision threshold `tau` (`τ`). They connect:
+
+- probability and uncertainty to calibrated attack probabilities;
+- train/validation/test sets and stratified cross-validation to leakage prevention;
+- standardization and PCA to dimensionality reduction;
+- bias–variance and class imbalance to model selection and PR-AUC;
+- grid, random, and Bayesian search to black-box optimization;
+- acquisition functions to exploration versus exploitation;
+- neural networks to the 1D-CNN and transformer benchmarks;
+- bagging, soft voting, and stacking to variance reduction and meta-learning;
+- Monte Carlo masking/noise experiments to robustness under uncertainty.
+
+See [docs/course_mapping.md](docs/course_mapping.md) for the detailed mapping.
+
+## Installation
+
+Use an isolated environment because the host Python installation may contain incompatible NumPy
+binary packages.
+
+```bash
+cd BenignIDS_v4
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[all]'
+```
+
+Python 3.12 is the supported runtime. The package metadata rejects older Python versions to keep
+the scientific and PyTorch dependency stack consistent. On Intel macOS, the available compatible
+stack is PyTorch 2.2.x with NumPy 1.26.x, so those versions are constrained in `pyproject.toml`.
+
+## Run
+
+Quick transformer demonstration:
+
+```bash
+benignids train-transformer --config configs/default.yaml --quick
+```
+
+Model and optimization comparison:
+
+```bash
+benignids run --config configs/default.yaml --quick
+```
+
+Remove `--quick` for the configured full experiment. The full Bayesian search can be expensive.
+
+True PCAP ingestion requires a CSV manifest like `examples/pcap_labels.csv`:
+
+```bash
+benignids prepare-pcap \
+  --manifest examples/pcap_labels.csv \
+  --output data/labelled_flows.parquet
+```
+
+Then point `data.path` at the generated Parquet file. A PCAP does not normally contain its own
+ground-truth attack label; the manifest supplies capture-level labels.
+
+## Leakage-safe evaluation
+
+- `X_train` fits model parameters and self-supervised representations.
+- Cross-validation inside `X_train` chooses hyperparameters.
+- `X_val` chooses `τ` for maximum F1 or a minimum-precision regime.
+- `X_test` is evaluated once after all choices are fixed.
+- PR-AUC (average precision) is primary because accuracy and ROC-AUC can be misleading under
+  severe imbalance.
+
+Artifacts include model files, optimizer parameters, metrics, split counts, feature schemas,
+training histories, and a manifest. Generated values are experimental results; this repository
+does not hard-code or claim the earlier approximately 0.95 PR-AUC result.
+
+## Layout
+
+```text
+configs/                 experiment configuration
+docs/                    course, architecture and data documentation
+examples/                PCAP label-manifest example
+notebooks/               executable teaching sequence
+src/benignids/           reusable package and CLI
+tests/                    behavior and regression tests
+artifacts/                generated outputs (gitignored)
+```
+
+## Safety and operational scope
+
+Live capture is deliberately not automatic: capturing network traffic may require elevated
+privileges and authorization. Use only captures you are permitted to inspect. This project is a
+research/training IDS, not a drop-in production control.

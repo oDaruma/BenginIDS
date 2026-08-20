@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-09-28T11:36:07Z",
+  "config": {
+    "random_state": 42,
+    "data_path": "archive/Payload_data_UNSW.csv",
+    "train_size": 55916,
+    "val_size": 11982,
+    "test_size": 11983
+  },
+  "models": {
+    "lgbm_payload": {
+      "validation_ap": 0.0,
+      "model_path": "out/models/lgbm_baseline.txt"
+    },
+    "lgbm_structured": {
+      "validation_ap": 0.0,
+      "model_path": "out/models/lgbm_baseline.txt"
+    }
+  }
+}

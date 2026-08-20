@@ -1,0 +1,21 @@
+{
+  "split_id": "6347e216-87ce-4584-b805-4535e06c95f8",
+  "created_utc": "2026-01-08T12:24:32Z",
+  "target_col": "label",
+  "counts": {
+    "train": {
+      "0": 15750,
+      "1": 906
+    },
+    "val": {
+      "0": 2625,
+      "1": 151
+    },
+    "test": {
+      "0": 2625,
+      "1": 151
+    }
+  },
+  "source": "archive/Payload_data_UNSW.csv",
+  "schema_version": 1
+}

@@ -1,0 +1,28 @@
+{
+  "timestamp_utc": "2025-10-12T21:46:05Z",
+  "reports": [
+    "5_3_skipped_single_class.json",
+    "champion.json",
+    "cnn.json",
+    "cnn_importance.json",
+    "cnn_tuned.json",
+    "final_table_raw.json",
+    "hpo_comparison.json",
+    "lgbm_baseline.json",
+    "lgbm_baseline_importance.json",
+    "lgbm_baseline_shap.json",
+    "lgbm_bo.json",
+    "lgbm_bo_importance.json",
+    "lgbm_random.json",
+    "models_evaluated.json",
+    "selection_summary.json",
+    "test_eval.json"
+  ],
+  "models": [
+    "champion_name.txt",
+    "cnn_tuned.keras",
+    "lgbm_baseline.txt",
+    "lgbm_bo.txt",
+    "lgbm_random.txt"
+  ]
+}

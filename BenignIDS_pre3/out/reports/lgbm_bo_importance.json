@@ -1,0 +1,44 @@
+{
+  "top10": [
+    [
+      "_ROW_ID",
+      0.9172364798589909
+    ],
+    [
+      "payload_byte_70",
+      0.0012398094079806965
+    ],
+    [
+      "payload_byte_31",
+      0.0001132798884629027
+    ],
+    [
+      "payload_byte_1",
+      0.0
+    ],
+    [
+      "payload_byte_2",
+      0.0
+    ],
+    [
+      "payload_byte_3",
+      0.0
+    ],
+    [
+      "payload_byte_4",
+      0.0
+    ],
+    [
+      "payload_byte_5",
+      0.0
+    ],
+    [
+      "payload_byte_6",
+      0.0
+    ],
+    [
+      "payload_byte_7",
+      0.0
+    ]
+  ]
+}

@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "benignids-v4"
+version = "4.0.0"
+description = "Course-aligned, reproducible IDS model comparison and optimization pipeline"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "joblib>=1.3",
+  "lightgbm>=4.0",
+  "matplotlib>=3.7",
+  "numpy>=1.26,<2",
+  "pandas>=2.0",
+  "pyyaml>=6.0",
+  "scikit-learn>=1.3",
+  "scikit-optimize>=0.10",
+  "seaborn>=0.13",
+  "tabulate>=0.9",
+]
+
+[project.optional-dependencies]
+deep = ["torch>=2.2,<2.3"]
+pcap = ["scapy>=2.5"]
+explain = ["shap>=0.44"]
+notebooks = ["jupyterlab>=4", "nbformat>=5.9"]
+dev = ["pytest>=8", "ruff>=0.5"]
+all = ["torch>=2.2,<2.3", "scapy>=2.5", "shap>=0.44", "jupyterlab>=4", "nbformat>=5.9", "pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+benignids = "benignids.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# This NAS-backed workspace exposes regular files with executable mode bits that chmod cannot
+# persistently clear. Module execution is provided by the `benignids` console entry point.
+ignore = ["EXE002"]

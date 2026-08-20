@@ -1,0 +1,22 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Generated datasets and trained-model artifacts stay local.
+*.npy
+*.npz
+*.joblib
+*.pkl
+*.h5
+*.keras
+*.parquet
+
+# Data and generated artifacts exceeding GitHub's 100 MB file limit.
+BenignIDS_pre3/archive/Payload_data_CICIDS2017.csv
+BenignIDS_pre3/archive/Payload_data_UNSW.csv
+BenignIDS_pre3/out/sequence/tfidf_vectors.pkl
+BenignIDS_pre3/staging/cache/splits.joblib
+BenignIDS_pre3/staging/core/df.joblib
+BenignIDS_pre3/staging/dataset_folded.csv
+BenignIDS_pre3/staging/split_preproc/X_train_all.npy
+BenignIDS_pre3/staging/splits/X_train.joblib

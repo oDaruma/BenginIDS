@@ -1,0 +1,25 @@
+{
+  "methods_compared": 3,
+  "results": [
+    {
+      "Method": "Bayesian Optimization",
+      "AP Score": 1.0,
+      "Model Path": "out/models/lgbm_bo.txt"
+    },
+    {
+      "Method": "Random Search",
+      "AP Score": 1.0,
+      "Model Path": "out/models/lgbm_random.txt"
+    },
+    {
+      "Method": "CNN Keras Tuner",
+      "AP Score": 0.05439481268011527,
+      "Model Path": "out/models/cnn_tuned.keras"
+    }
+  ],
+  "best_method": {
+    "name": "Bayesian Optimization",
+    "ap_score": 1.0
+  },
+  "timestamp_utc": "2025-10-12T21:45:24Z"
+}

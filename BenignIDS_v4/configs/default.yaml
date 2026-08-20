@@ -1,0 +1,44 @@
+project:
+  name: BenignIDS_v4
+  random_state: 42
+  output_dir: artifacts
+  tutorial_mode: true
+data:
+  path: ../../BenignIDS_Notebooks_v3/archive/Payload_data_UNSW.csv
+  target: label
+  benign_labels: [benign, normal]
+  drop_features: [ttl, total_len, t_delta]
+  payload_column: null
+  payload_prefix_bytes: 256
+  sample_rows: null
+split:
+  test_size: 0.20
+  validation_size: 0.20
+  cv_folds: 5
+  label_noise_rate: 0.0
+models:
+  include: [logistic_regression, random_forest, lightgbm]
+  cnn:
+    enabled: false
+    epochs: 12
+    batch_size: 256
+optimization:
+  methods: [grid, random, bayesian]
+  n_iter: 20
+  scoring: average_precision
+  n_jobs: -1
+threshold:
+  objective: f1
+  minimum_precision: null
+transformer:
+  vocab_size: 16384
+  max_length: 256
+  d_model: 128
+  nhead: 4
+  layers: 4
+  feedforward: 256
+  dropout: 0.1
+  pretrain_epochs: 5
+  finetune_epochs: 10
+  batch_size: 64
+  patience: 3

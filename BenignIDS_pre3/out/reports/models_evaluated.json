@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "name": "VAL::champion_model.joblib",
+      "n": 2000,
+      "AP": 0.093,
+      "ROC": 0.5,
+      "F1": 0.0,
+      "P": 0.0,
+      "R": 0.0
+    }
+  ],
+  "candidates": [
+    "out/models/champion_model.joblib"
+  ]
+}

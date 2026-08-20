@@ -1,0 +1,7 @@
+{
+  "reason": "single_class_y",
+  "classes": [
+    0
+  ],
+  "action": "saved DummyClassifier pipeline at bo/bo_lgbm_pipeline.joblib"
+}

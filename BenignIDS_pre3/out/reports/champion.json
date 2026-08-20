@@ -1,0 +1,7 @@
+{
+  "status": "ready",
+  "model": "lgbm_baseline",
+  "path": "out/models/lgbm_baseline.txt",
+  "ap_val": 1.0,
+  "timestamp_utc": "2025-10-11T19:57:02Z"
+}

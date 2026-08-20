@@ -1,0 +1,20 @@
+{
+  "model_path": "/Users/max/Library/CloudStorage/OneDrive-Personal/Imperial Pro Cert in Machine Learning and Artificial Intelligence/IMP-PCMLAI-M25-final-project/BenignIDS_Notebooks_v3/out/lgbm_best_payload.pkl",
+  "vectorizer_path": "/Users/max/Library/CloudStorage/OneDrive-Personal/Imperial Pro Cert in Machine Learning and Artificial Intelligence/IMP-PCMLAI-M25-final-project/BenignIDS_Notebooks_v3/out/vectorizer.joblib",
+  "best_params": {
+    "learning_rate": 0.1501725572054685,
+    "num_leaves": 60,
+    "max_depth": 10,
+    "min_child_samples": 121,
+    "feature_fraction": 0.6674996517121548,
+    "bagging_fraction": 0.45998494949080176,
+    "lambda_l1": 4.592488919658672,
+    "lambda_l2": 3.337086111390219
+  },
+  "metrics": {
+    "train_ap": null,
+    "val_ap": null,
+    "test_ap": null
+  },
+  "random_state": 42
+}

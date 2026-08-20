@@ -1,0 +1,16 @@
+{
+  "split_id": "ae7bb99e-25c8-40e9-9da5-458aced274c9",
+  "vocab": "byte_hist_256",
+  "shape": {
+    "train": [
+      16656,
+      256
+    ],
+    "val": [
+      2776,
+      256
+    ]
+  },
+  "payload_col": null,
+  "fallback": true
+}

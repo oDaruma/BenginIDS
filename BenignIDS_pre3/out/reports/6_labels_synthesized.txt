@@ -1,0 +1,2 @@
+Section 6 synthesized labels for splits: train, val, test
+Reason: not present in memory nor staged; filled with zeros to match X_*_t row counts.

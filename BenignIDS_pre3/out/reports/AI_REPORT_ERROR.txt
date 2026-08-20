@@ -1,0 +1,75 @@
+Error generating AI report at 2025-10-11T19:57:05Z
+Error: Error code: 403 - {'error': {'message': 'Project `proj_3qU4iYMSlKzH54e9BxlDs9sc` does not have access to model `gpt-4`', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}
+
+Metrics attempted:
+{
+  "dataset": {
+    "splits": {
+      "train": {
+        "0": 15750,
+        "1": 906
+      },
+      "val": {
+        "0": 2625,
+        "1": 151
+      },
+      "test": {
+        "0": 2625,
+        "1": 151
+      }
+    },
+    "split_id": "ae7bb99e-25c8-40e9-9da5-458aced274c9"
+  },
+  "models": {
+    "baseline": {
+      "status": "ok",
+      "ap_val": 1.0,
+      "best_iteration": 1,
+      "cv_ap_mean": 1.0,
+      "cv_ap_std": 5.551115123125783e-17,
+      "cv_folds": 5,
+      "optimal_threshold": 0.12604927551543602,
+      "optimal_f1": 0.99999999995
+    },
+    "bo": {
+      "status": "ok",
+      "ap_val": 1.0,
+      "best_iteration": 3,
+      "best_params": {
+        "num_leaves": 84,
+        "learning_rate": 0.018661881481387678,
+        "min_data_in_leaf": 160
+      },
+      "model_path": "out/models/lgbm_bo.txt",
+      "cv_ap_mean": 0.9999761087053904,
+      "cv_ap_std": 5.342255881734462e-05,
+      "cv_folds": 5,
+      "optimal_threshold": 0.10677299827371996,
+      "optimal_f1": 0.99999999995
+    },
+    "cnn": {
+      "status": "ok",
+      "ap_val": 0.05439481268011527,
+      "model": "cnn_16x16_hist"
+    }
+  },
+  "test_results": {
+    "lgbm_baseline": {
+      "ap": 0.9998709899372151,
+      "roc_auc": 0.999996215704825,
+      "tp": 0,
+      "fp": 0,
+      "tn": 2625,
+      "fn": 151
+    },
+    "lgbm_bo": {
+      "ap": 0.9997419798744301,
+      "roc_auc": 0.99999243140965,
+      "tp": 0,
+      "fp": 0,
+      "tn": 2625,
+      "fn": 151
+    }
+  },
+  "timestamp": "2025-10-11T19:57:02Z"
+}

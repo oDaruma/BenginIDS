@@ -1,0 +1,4 @@
+pcap_path,label,attack_cat
+/path/to/normal_capture.pcap,0,Normal
+/path/to/attack_capture.pcap,1,Exploits
+
